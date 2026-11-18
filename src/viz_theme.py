@@ -6,17 +6,16 @@ Shared Altair theme and general chart helper functions
 import os
 import altair as alt
 
-# ---- Palette -------------------------------------------------------------
+# Color Constants (for importing)
 ORANGE, NAVY, BLUE, GRAY, LIGHT = "#fc5d26", "#1f3864", "#2e75b6", "#e7e6e6", "#f2f2f2"
 TEXT_GRAY = "#595959"
-MUTED = "#9dc3e6"          # light blue for de-emphasized series
-
-# Size that fits the 7.6" x 4.2" chart box on the Results slides
+MUTED = "#9dc3e6"
 CHART_W, CHART_H = 730, 400
 
-alt.data_transformers.disable_max_rows()   # Altair caps at 5,000 rows by default
+# Disable altair max row limit
+alt.data_transformers.disable_max_rows()
 
-# ---- Theme ---------------------------------------------------------------
+# Setting the color theme (altair)
 def _theme_config():
     return {
         "config": {
@@ -42,17 +41,16 @@ def _theme_config():
         }
     }
 
-try:                                        # Altair 5.5+
+try:
     @alt.theme.register("precision", enable=True)
     def precision_theme() -> alt.theme.ThemeConfig:
         return _theme_config()
-except AttributeError:                      # older Altair
+except AttributeError:
     alt.themes.register("precision", _theme_config)
     alt.themes.enable("precision")
 
-# ---- Helpers -------------------------------------------------------------
+# General chart helpers!
 def save_chart(chart, name, folder="figures", scale=2, fmt="png"):
-    """Save a chart for the deck (needs: pip install vl-convert-python)."""
     os.makedirs(folder, exist_ok=True)
     path = os.path.join(folder, f"{name}.{fmt}")
     chart.save(path, scale_factor=scale) if fmt == "png" else chart.save(path)
@@ -63,8 +61,6 @@ def save_chart(chart, name, folder="figures", scale=2, fmt="png"):
 def bar_chart(df, x, y, title, highlight=None, horizontal=True,
               x_title=None, y_title=None, value_format=".0f", labels=True,
               sort="-x", width=CHART_W, height=CHART_H):
-    """Bar chart: category `x`, numeric `y`. `highlight` (a category value or
-    list of values) is drawn in orange; everything else navy."""
     hl = [highlight] if highlight is not None and not isinstance(highlight, (list, tuple, set)) else list(highlight or [])
     color = (alt.condition(alt.FieldOneOfPredicate(field=x, oneOf=hl), alt.value(ORANGE), alt.value(NAVY))
              if hl else alt.value(NAVY))
@@ -88,8 +84,6 @@ def bar_chart(df, x, y, title, highlight=None, horizontal=True,
 
 def line_chart(df, x, y, title, group=None, highlight=None,
                x_title=None, y_title=None, x_type="T", width=CHART_W, height=CHART_H):
-    """Line chart. With `group`, `highlight` (one group value) is orange and
-    the other lines are muted so the key trend stands out."""
     enc = dict(x=alt.X(f"{x}:{x_type}", title=x_title),
                y=alt.Y(f"{y}:Q", title=y_title or y))
     if group:
